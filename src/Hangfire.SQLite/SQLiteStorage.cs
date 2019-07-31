@@ -1,17 +1,17 @@
 // This file is part of Hangfire.
 // Copyright ?2013-2014 Sergey Odinokov.
-// 
+//
 // Hangfire is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as 
-// published by the Free Software Foundation, either version 3 
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3
 // of the License, or any later version.
-// 
+//
 // Hangfire is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
-// You should have received a copy of the GNU Lesser General Public 
+//
+// You should have received a copy of the GNU Lesser General Public
 // License along with Hangfire. If not, see <http://www.gnu.org/licenses/>.
 
 using Hangfire.Annotations;
@@ -22,14 +22,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Threading;
-
-#if NETSTANDARD
 using Microsoft.Data.Sqlite;
-#else
-using System.Data.SQLite;
-using System.Transactions;
-using IsolationLevel = System.Transactions.IsolationLevel;
-#endif
 
 namespace Hangfire.SQLite
 {
@@ -77,7 +70,7 @@ namespace Hangfire.SQLite
         /// <param name="existingConnection">Existing connection</param>
         public SQLiteStorage([NotNull] DbConnection existingConnection)
             : this(existingConnection, new SQLiteStorageOptions())
-        {            
+        {
         }
 
         public SQLiteStorage([NotNull] DbConnection existingConnection, [NotNull] SQLiteStorageOptions options)
@@ -114,16 +107,12 @@ namespace Hangfire.SQLite
         //public override void WriteOptionsToLog(ILog logger)
         //{
         //    logger.Info("Using the following options for SQL Server job storage:");
-        //    logger.InfoFormat("    Queue poll interval: {0}.", _options.QueuePollInterval);        
+        //    logger.InfoFormat("    Queue poll interval: {0}.", _options.QueuePollInterval);
         //}
 
         public override string ToString()
         {
-#if NETSTANDARD
             var connectionStringBuilder = new SqliteConnectionStringBuilder(_connectionString);
-#else
-            var connectionStringBuilder = new SQLiteConnectionStringBuilder(_connectionString);
-#endif
             return $"SQLite: {connectionStringBuilder.DataSource}";
         }
 
@@ -144,7 +133,7 @@ namespace Hangfire.SQLite
             {
                 connection = CreateAndOpenConnection(isWriteLock);
                 return func(connection);
-            }                 
+            }
             finally
             {
                 ReleaseConnection(connection);
@@ -162,7 +151,6 @@ namespace Hangfire.SQLite
 
         internal T UseTransaction<T>([InstantHandle] Func<DbConnection, DbTransaction, T> func, IsolationLevel? isolationLevel)
         {
-#if NETSTANDARD
             return UseConnection(connection =>
             {
                 using (var transaction = connection.BeginTransaction(isolationLevel ?? _options.TransactionIsolationLevel ?? IsolationLevel.ReadCommitted))
@@ -173,20 +161,6 @@ namespace Hangfire.SQLite
                     return result;
                 }
             }, true);
-#else
-            using (var transaction = CreateTransaction(isolationLevel ?? _options.TransactionIsolationLevel))
-            {
-                var result = UseConnection(connection =>
-                {
-                    connection.EnlistTransaction(Transaction.Current);
-                    return func(connection, null);
-                }, true);
-
-                transaction.Complete();
-
-                return result;
-            }
-#endif
         }
 
         internal DbConnection CreateAndOpenConnection(bool isWriteLock = false)
@@ -201,14 +175,7 @@ namespace Hangfire.SQLite
                 _dbMonitorCache[_connectionString].TryEnterWriteLock(ReaderWriterLockTimeout);
             }
 
-#if NETSTANDARD
             var connection = new SqliteConnection(_connectionString);
-#else
-            var connection = new SQLiteConnection(_connectionString)
-            {
-                Flags = SQLiteConnectionFlags.MapIsolationLevels
-            };
-#endif
             connection.Open();
 
             return connection;
@@ -222,7 +189,7 @@ namespace Hangfire.SQLite
         internal void ReleaseConnection(IDbConnection connection)
         {
             if (connection != null && !IsExistingConnection(connection))
-            {                
+            {
                 connection.Dispose();
 
                 ReleaseDbWriteLock();
@@ -235,8 +202,8 @@ namespace Hangfire.SQLite
             if (dbMonitor.IsWriteLockHeld)
             {
                 dbMonitor.ExitWriteLock();
-            }            
-        }        
+            }
+        }
 
         private void Initialize()
         {
@@ -256,15 +223,5 @@ namespace Hangfire.SQLite
             var defaultQueueProvider = new SQLiteJobQueueProvider(this, _options);
             QueueProviders = new PersistentJobQueueProviderCollection(defaultQueueProvider);
         }
-
-#if !NETSTANDARD        
-        private TransactionScope CreateTransaction(IsolationLevel? isolationLevel)
-        {
-            return isolationLevel != null
-                ? new TransactionScope(TransactionScopeOption.Required,
-                    new TransactionOptions { IsolationLevel = isolationLevel.Value, Timeout = _options.TransactionTimeout })
-                : new TransactionScope();
-        }
-#endif
     }
 }
