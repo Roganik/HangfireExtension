@@ -34,8 +34,8 @@ namespace Hangfire.SQLite
         private static readonly TimeSpan ReaderWriterLockTimeout = TimeSpan.FromSeconds(30);
         private static Dictionary<string, ReaderWriterLockSlim> _dbMonitorCache = new Dictionary<string, ReaderWriterLockSlim>();
 
-        public SQLiteStorage(string nameOrConnectionString)
-            : this(nameOrConnectionString, new SQLiteStorageOptions())
+        public SQLiteStorage(string connectionString)
+            : this(connectionString, new SQLiteStorageOptions())
         {
         }
 
