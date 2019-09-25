@@ -11,12 +11,7 @@ jobs:
       uses: warrenbuckley/Setup-Nuget@v1
 
     - name: Configure Github Package Registry for Nuget.exe
-      run: |
-        nuget source Add 
-        -Name "GitHub" 
-        -Source "https://nuget.pkg.github.com/Roganik/index.json" 
-        -UserName Roganik 
-        -Password ${{secrets.github_token}}    
+      run: nuget source Add -Name "GitHub" -Source "https://nuget.pkg.github.com/Roganik/index.json" -UserName Roganik -Password ${{secrets.github_token}}    
     
     - name: Checkout Source
       uses: actions/checkout@v1
