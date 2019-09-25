@@ -14,9 +14,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '2.2.402'
-        
-    - name: Configure Dotnet SDK for one-time use    
-      run: set DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
     
     - name: Generate Build Number
       id: buildnumber
@@ -25,8 +22,10 @@ jobs:
         token: ${{secrets.github_token}}        
     
     - name: Build Nuget Package
-      run: dotnet pack -c Release --version-suffix ci-${{steps.buildnumber.outputs.build_number}} --output '../../nupkgs' HangfireExtension.sln
-    
+      run: dotnet pack -c Release --version-suffix ci-${{steps.buildnumber.outputs.build_number}} --output ../../nupkgs HangfireExtension.sln
+      env: 
+        DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+        
     - name: Setup Nuget.exe
       uses: warrenbuckley/Setup-Nuget@v1
 
