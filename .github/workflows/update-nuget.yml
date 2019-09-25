@@ -32,7 +32,7 @@ jobs:
         dotnet-version: '2.2.402'
     
     - name: Build Nuget Package
-    - run: |
+      run: |
         dotnet pack 
         -c Release 
         --version-suffix 'ci-$BUILD_NUMBER'
