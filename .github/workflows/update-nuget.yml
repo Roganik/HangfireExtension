@@ -1,0 +1,43 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:    
+    - name: Setup Dotnet SDK
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '2.2.402' # SDK Version to use.
+    
+    - name: Setup Nuget.exe
+      uses: warrenbuckley/Setup-Nuget@v1
+
+    - name: Configure Github Package Registry for Nuget.exe
+    - run: |
+        nuget source Add 
+        -Name "GitHub" 
+        -Source "https://nuget.pkg.github.com/Roganik/index.json" 
+        -UserName Roganik 
+        -Password ${{secrets.github_token}}
+
+    - name: Generate Build Number
+      uses: einaregilsson/build-number@v1 
+      with:
+        token: ${{secrets.github_token}}        
+    
+    - name: Checkout Source
+    - uses: actions/checkout@v1
+
+    - name: Build Nuget Package
+    - run: |
+        dotnet pack 
+        -c Release 
+        --version-suffix 'ci-$BUILD_NUMBER'
+        --output '../../nupkgs'
+        HangfireExtension.sln
+    
+    - name: Nuget Push
+      run: nuget push nupkgs/*.nupkg -Source "GitHub" 
