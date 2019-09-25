@@ -8,7 +8,7 @@ jobs:
     
     steps:    
     - name: Setup Dotnet SDK
-    - uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '2.2.402' # SDK Version to use.
     
@@ -16,7 +16,7 @@ jobs:
       uses: warrenbuckley/Setup-Nuget@v1
 
     - name: Configure Github Package Registry for Nuget.exe
-    - run: |
+      run: |
         nuget source Add 
         -Name "GitHub" 
         -Source "https://nuget.pkg.github.com/Roganik/index.json" 
@@ -29,10 +29,10 @@ jobs:
         token: ${{secrets.github_token}}        
     
     - name: Checkout Source
-    - uses: actions/checkout@v1
+      uses: actions/checkout@v1
 
     - name: Build Nuget Package
-    - run: |
+      run: |
         dotnet pack 
         -c Release 
         --version-suffix 'ci-$BUILD_NUMBER'
