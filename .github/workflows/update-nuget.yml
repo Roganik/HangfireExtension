@@ -19,12 +19,13 @@ jobs:
       run: set DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
     
     - name: Generate Build Number
+      id: buildnumber
       uses: einaregilsson/build-number@v1 
       with:
         token: ${{secrets.github_token}}        
     
     - name: Build Nuget Package
-      run: dotnet pack -c Release --version-suffix ci-${{BUILD_NUMBER}} --output '../../nupkgs' HangfireExtension.sln
+      run: dotnet pack -c Release --version-suffix ci-${{steps.buildnumber.outputs.build_number}} --output '../../nupkgs' HangfireExtension.sln
     
     - name: Setup Nuget.exe
       uses: warrenbuckley/Setup-Nuget@v1
