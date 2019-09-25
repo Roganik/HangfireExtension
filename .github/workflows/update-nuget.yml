@@ -27,12 +27,7 @@ jobs:
         dotnet-version: '2.2.402'
     
     - name: Build Nuget Package
-      run: |
-        dotnet pack 
-        -c Release 
-        --version-suffix 'ci-$BUILD_NUMBER'
-        --output '../../nupkgs'
-        HangfireExtension.sln
+      run: dotnet pack -c Release --version-suffix 'ci-$BUILD_NUMBER' --output '../../nupkgs' HangfireExtension.sln
     
     - name: Nuget Push
       run: nuget push nupkgs/*.nupkg -Source "GitHub" 
